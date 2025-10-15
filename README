@@ -1,0 +1,27 @@
+Useful tools to automate your Debian vm:
+
+1. generate your preseed, all the graphical install questions into a file
+--> https://preseed.valete.fr/index.html
+
+2. post online your preseed, here use raw access
+--> https://raw.githubusercontent.com/Lucie-Kin/vm_installer/refs/heads/main/preseed.cfg
+
+3. create an empty flexible image
+--> qemu-img create -f qcow2 automate.qcow2 -o preallocation=off 40G
+
+4. start your vm
+--> qemu-system-x86_64 \
+  -enable-kvm \
+  -m 8G \
+  -smp 4 \
+  -cpu host \
+  -net nic,model=virtio \
+  -net user,hostfwd=tcp::22222-:22 \
+  -drive file=/address_to_your_file/automate.qcow2,format=qcow2,if=ide \
+  -cdrom /address_to_your_iso/debian-12.10.0-amd64-netinst.iso
+
+5. locate place to share (you have to type the raw address by hand sorry)
+--> https://preseed.valete.fr/about.html
+--> or simply: (BIOS mode) Advanced options >> Automated install \
+	>> online_preseed_address >> <Continue>
+
