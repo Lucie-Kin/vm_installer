@@ -42,6 +42,10 @@ if [[ -f "$TRANFER/.env" ]]; then
     chown "$USER:$USER" "$HOME/tmp/.env"
 fi
 
+# install firefox
+echo "installing firefox..."
+sudo snap install firefox
+
 # install vs-code
 sudo apt update
 sudo apt upgrade -y
