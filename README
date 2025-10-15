@@ -25,3 +25,7 @@ Useful tools to automate your Debian vm:
 --> or simply: (BIOS mode) Advanced options >> Automated install \
 	>> online_preseed_address >> <Continue>
 
+
+6. sharing file/directory directly from host to vm
+--> clean port (optional): ssh-keygen -f "/path_to_dir/.ssh/known_hosts" -R "[localhost]:22222"
+--> scp -r -P 22222 /host_path_to_dir_or_file/ user@localhost:/home/user/path_to_location_in_vm
