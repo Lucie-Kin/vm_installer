@@ -5,6 +5,7 @@ set -e
 USER="user"
 HOME="/home/$USER"
 TRANSFER="$HOME/combined"
+TASKBAR="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 
 # check transfer file
 if [[ ! -d "$TRANSFER" ]]; then
@@ -42,20 +43,18 @@ if [[ -f "$TRANFER/.env" ]]; then
     chown "$USER:$USER" "$HOME/tmp/.env"
 fi
 
-# install firefox
-echo "installing firefox..."
-sudo snap install firefox
-
 # install vs-code
-sudo apt update
-sudo apt upgrade -y
-echo "installing vscode..."
-wget -qO- https://packages.microsoft.com/keys/microsoft.asc | \
-  gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
-echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" | \
-  sudo tee /etc/apt/sources.list.d/vscode.list
-sudo apt update
-sudo apt install -y code
+if [[ ! -e "/usr/bin/code" ]]; then
+    sudo apt update
+    sudo apt upgrade -y
+    echo "installing vscode..."
+    wget -qO- https://packages.microsoft.com/keys/microsoft.asc | \
+       gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.gpg > /dev/null
+    echo "deb [arch=amd64] https://packages.microsoft.com/repos/code stable main" | \
+       sudo tee /etc/apt/sources.list.d/vscode.list
+    sudo apt update
+    sudo apt install -y code
+fi
 
 # clone git repo
 if [[ -d "$HOME/inception" ]]; then
@@ -64,6 +63,19 @@ fi
 echo "copying my work repo locally..."
 git clone git@vogsphere.42nice.fr:vogsphere/intra-uuid-a9e25ec3-ccf9-4b00-983c-15153ec3697f-6611255-lchauffo "$HOME/inception"
 sudo chown -R "$USER:$USER" "$HOME/inception"
+
+# personalized taskbar
+echo "adding new shortcut to the taskbar..."
+if [[ -f "$TASKBAR" ]]; then
+    FIREFOX=$(ls /usr/share/applications/*firefox*.desktop)
+    KONSOLE=$(ls /usr/share/applications/*konsole*.desktop)
+    if [[ "$FIREFOX" -a -z $(awk '/firefox/' "$TASKBAR") ]]; then
+    	sed -i '/launchers=/s/$/,applications:'"$FIREFOX" "$TASKBAR"
+    fi
+    if [[ "$KONSOLE" -a -z $(awk '/konsole/' "$TASKBAR") ]]; then
+    	sed -i '/launchers=/s/$/,applications:'"$KONSOLE" "$TASKBAR"
+    fi
+fi
 
 # destroy transfer directory
 if [[ -d "$TRANSFER" ]]; then

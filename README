@@ -1,5 +1,11 @@
 Useful tools to automate your Debian vm:
 
+0. get your Debian image
+--> wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.1.0-amd64-netinst.iso
+--> shasum your-dowmloading_debian.iso
+--> diff this_link-->https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA512SUMS your-dowmloading_debian.iso
+--> if 0, your image is correct
+
 1. generate your preseed, all the graphical install questions into a file
 --> https://preseed.valete.fr/index.html
 
@@ -24,7 +30,6 @@ Useful tools to automate your Debian vm:
 --> https://preseed.valete.fr/about.html
 --> or simply: (BIOS mode) Advanced options >> Automated install \
 	>> online_preseed_address >> <Continue>
-
 
 6. sharing file/directory directly from host to vm
 --> clean port (optional): ssh-keygen -f "/path_to_dir/.ssh/known_hosts" -R "[localhost]:22222"
