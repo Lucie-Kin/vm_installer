@@ -3,12 +3,14 @@ set -euo pipefail
 
 # running the script as root
 if [ "$EUID" -ne 0 ]; then
+    ORIGINAL_USER="$USER"
     echo "re-running with root priviledge..."
-    exec su -c "bash '$0' $@"
+    exec su -c "ORIGINAL_USER='$ORIGINAL_USER' bash '$0' $@"
+else
+    USER="${ORIGINAL_USER:-user}"
 fi
 
 # var
-USER="user"
 HOME="/home/$USER"
 TRANSFER="$HOME/combined"
 TASKBAR="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
@@ -110,20 +112,18 @@ fi
 
 # set background
 echo "personalizing background..."
-if [[ -f "$TRANSFER/$BG_FILE" ]]; then
-    mkdir -p "$BG_DIR"
-    mv "$TRANSFER/$BG_FILE" "$BG_DIR"
-    mv "$TRANSFER/$BG_FILE_NOBG" "$BG_DIR" 2>/dev/null || true
-    echo "extracted animated background to '$BG_DIR'"
-fi
+mkdir -p "$BG_DIR"
+[[ -f "$TRANSFER/$BG_FILE" ]] && mv "$TRANSFER/$BG_FILE" "$BG_DIR"
+[[ -f "$TRANSFER/$BG_FILE_NOBG" ]] && mv "$TRANSFER/$BG_FILE_NOBG" "$BG_DIR"
+echo "extracted animated background to '$BG_DIR'"
     
-if [[ -f "NEW_BG" ]]; then
+if [[ -f "$NEW_BG" ]]; then
     echo "setting animated background..."
     #retrieve user dbus session
     DBUS_ADDR=$(sudo -u "$USER" cat /run/user/$(id -u "$USER")/bus 2>/dev/null || true)
     export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u "$USER")/bus"
     #apply wallpaper using qdbus
-    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSIONBUS_ADDRESS" qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
+    sudo -u "$USER" DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
     var Desktops = desktops();
     for (i=0;i<Desktops.length;i++) {
       d = Desktops[i];
