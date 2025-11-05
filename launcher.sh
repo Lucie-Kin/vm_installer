@@ -4,7 +4,7 @@ set -euo pipefail
 # running the script as root
 if [ "$EUID" -ne 0 ]; then
     echo "re-running with root priviledge..."
-    exec sudo bash "$0" "$@"
+    exec su -c "bash '$0' $@"
 fi
 
 # var
