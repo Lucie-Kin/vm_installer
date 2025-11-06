@@ -23,8 +23,10 @@ Useful tools to automate your Debian vm:
   -cpu host \
   -net nic,model=virtio \
   -net user,hostfwd=tcp::22222-:22 \
-  -drive file=/address_to_your_file/automate.qcow2,format=qcow2,if=ide \
-  -cdrom /address_to_your_iso/debian-12.10.0-amd64-netinst.iso
+  -drive file=/address_to_your_file/automate.qcow2,format=qcow2,if=virtio \
+  -cdrom /address_to_your_iso/debian-12.10.0-amd64-netinst.iso \
+  -display sdl,gl=on \
+  -device virtio-vga-gl
 
 5. locate place to share (you have to type the raw address by hand sorry)
 --> https://preseed.valete.fr/about.html

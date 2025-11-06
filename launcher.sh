@@ -102,12 +102,41 @@ echo "adding personnalized shortcut to the taskbar..."
 if [[ -f "$TASKBAR" ]]; then
     FIREFOX=$(ls /usr/share/applications/*firefox*.desktop 2>/dev/null || true)
     KONSOLE=$(ls /usr/share/applications/*konsole*.desktop 2>/dev/null || true)
-    if [[ -n "$FIREFOX" && -z "$(awk '/firefox/' "$TASKBAR")" ]]; then
-    	sed -i "s#launchers=.*#launchers=&,applications:$FIREFOX#" "$TASKBAR"
+    FILEMANAGER=$(ls /usr/share/applications/*dolphin*.desktop 2>/dev/null || true)
+    #simplest way the taskbar is reachable
+    if grep -q "^launchers=" "$TASKBAR"; then
+    	echo "adding to existing taskbar..."
+        if [[ -n "$FIREFOX" && -z "$(awk '/firefox/' "$TASKBAR")" ]]; then
+    	    sed -i "s#launchers=.*#launchers=&,applications:$FIREFOX#" "$TASKBAR"
+        fi
+        if [[ -n "$KONSOLE" && -z "$(awk '/konsole/' "$TASKBAR")" ]]; then
+    	    sed -i "s#launchers=.*#launchers=&,applications:$KONSOLE#" "$TASKBAR"
+        fi
+    else #creating the specific line to tell taskbar
+        echo "creating new taskbar section..."
+        REF="[Containments][2][Applets][5]"
+        INSERT="\n$REF[Configuration][General]\nlaunchers=applications:$FILEMANAGER,applications:$FIREFOX,applications:$KONSOLE"
+        if grep -qF "$REF" "$TASKBAR"; then
+            awk -i inplace -v ref="$REF" -v insert="$INSERT" '
+                $0 == ref {
+                    print $0
+                    in_block = 1
+                    next
+                }
+                in_block && NF == 0 {
+                   print ""
+                   print insert
+                   in_block = 0
+                }
+                {print $0}
+            ' "$TASKBAR"
+        else
+            echo "No $REF section found - please update taskbar manually"
+        fi
     fi
-    if [[ -n "$KONSOLE" && -z "$(awk '/konsole/' "$TASKBAR")" ]]; then
-    	sed -i "s#launchers=.*#launchers=&,applications:$KONSOLE#" "$TASKBAR"
-    fi
+    echo "reloading plasmashell..."
+    sudo -u "$USER" kquitapp5 plasmashell >/dev/null 2>&1 || true
+    sudo -u "$USER" kstart5 plasmashell >/dev/null 2>&1 &
 fi
 
 # set background
