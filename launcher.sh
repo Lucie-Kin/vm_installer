@@ -16,7 +16,7 @@ TRANSFER="$HOME/combined"
 TASKBAR="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 BG_DIR="$HOME/Pictures/Backgrounds"
 BG_FILE="animated_desktop_43.gif"
-BG_FILE_NOBG="animated_desktop_nobg_43.gif"
+BG_FILE_NOBG="animated_desktop_43_nobg.gif"
 NEW_BG="$BG_DIR/$BG_FILE"
 BG_COLOR=#6C9F9F
 
@@ -100,22 +100,19 @@ sudo chown -R "$USER:$USER" "$HOME/inception"
 # kde personalized taskbar
 echo "adding personnalized shortcut to the taskbar..."
 if [[ -f "$TASKBAR" ]]; then
-    FIREFOX=$(ls /usr/share/applications/*firefox*.desktop 2>/dev/null || true)
-    KONSOLE=$(ls /usr/share/applications/*konsole*.desktop 2>/dev/null || true)
-    FILEMANAGER=$(ls /usr/share/applications/*dolphin*.desktop 2>/dev/null || true)
+    FILEMANAGER="preferred://filemanager"
+    BROWSER="preferred://browser"
+    TERMINAL=$(ls /usr/share/applications/*konsole*.desktop 2>/dev/null || true)
     #simplest way the taskbar is reachable
     if grep -q "^launchers=" "$TASKBAR"; then
     	echo "adding to existing taskbar..."
-        if [[ -n "$FIREFOX" && -z "$(awk '/firefox/' "$TASKBAR")" ]]; then
-    	    sed -i "s#launchers=.*#launchers=&,applications:$FIREFOX#" "$TASKBAR"
-        fi
-        if [[ -n "$KONSOLE" && -z "$(awk '/konsole/' "$TASKBAR")" ]]; then
-    	    sed -i "s#launchers=.*#launchers=&,applications:$KONSOLE#" "$TASKBAR"
-        fi
+    	grep -q "$BROWSER" "$TASKBAR" || sed -i "s#launchers=.*#launchers=&,$BROWSER#" "$TASKBAR"
+    	grep -q "$TERMINAL" "$TASKBAR" || sed -i "s#launchers=.*#launchers=&,applications:$TERMINAL#" "$TASKBAR"
     else #creating the specific line to tell taskbar
         echo "creating new taskbar section..."
         REF="[Containments][2][Applets][5]"
-        INSERT="\n$REF[Configuration][General]\nlaunchers=applications:$FILEMANAGER,applications:$FIREFOX,applications:$KONSOLE"
+        INSERT="$REF[Configuration][General]]
+launchers=$FILEMANAGER,$BROWSER,applications:$KONSOLE"
         if grep -qF "$REF" "$TASKBAR"; then
             awk -i inplace -v ref="$REF" -v insert="$INSERT" '
                 $0 == ref {
@@ -129,7 +126,7 @@ if [[ -f "$TASKBAR" ]]; then
                    in_block = 0
                 }
                 {print $0}
-            ' "$TASKBAR"
+            ' "$TASKBAR" > "${TASKBAR}.tmp" && mv "${TASKBAR}.tmp" "$TASKBAR"
         else
             echo "No $REF section found - please update taskbar manually"
         fi
