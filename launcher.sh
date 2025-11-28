@@ -48,13 +48,22 @@ fi
 echo "adding user to group 'docker'"
 sudo usermod -aG docker "$USER"
 
-# copy .env for docker
+# move .env for docker
 mkdir -p "$HOME/tmp"
+chown "$USER:$USER" "$HOME/tmp"
 echo "transfering .env for my docker..."
 chmod 755 "$HOME/tmp"
 if [[ -f "$TRANSFER/.env" ]]; then
     mv "$TRANSFER/.env" "$HOME/tmp/.env"
     chown "$USER:$USER" "$HOME/tmp/.env"
+fi
+
+#move content folders for wordpress
+if [[ -d "$TRANSFER/CV" ]]; then
+    mv "$TRANSFER/CV" "$HOME/Documents"
+fi
+if [[ -d "$TRANSFER/Wordpress" ]]; then
+    mv "$TRANSFER/Wordpress" "$HOME/Pictures"
 fi
 
 #install latest node.js lts
@@ -96,45 +105,6 @@ echo "copying my work repo locally..."
 sudo -u "$USER" env GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_rsa -o UserKnownHostsFile=$KNOWN_HOSTS" \
 git clone git@vogsphere.42nice.fr:vogsphere/intra-uuid-a9e25ec3-ccf9-4b00-983c-15153ec3697f-6611255-lchauffo "$HOME/inception"
 sudo chown -R "$USER:$USER" "$HOME/inception"
-
-# kde personalized taskbar
-echo "adding personnalized shortcut to the taskbar..."
-if [[ -f "$TASKBAR" ]]; then
-    FILEMANAGER="preferred://filemanager"
-    BROWSER="preferred://browser"
-    TERMINAL=$(ls /usr/share/applications/*konsole*.desktop 2>/dev/null || true)
-    #simplest way the taskbar is reachable
-    if grep -q "^launchers=" "$TASKBAR"; then
-    	echo "adding to existing taskbar..."
-    	grep -q "$BROWSER" "$TASKBAR" || sed -i "s#launchers=.*#launchers=&,$BROWSER#" "$TASKBAR"
-    	grep -q "$TERMINAL" "$TASKBAR" || sed -i "s#launchers=.*#launchers=&,applications:$TERMINAL#" "$TASKBAR"
-    else #creating the specific line to tell taskbar
-        echo "creating new taskbar section..."
-        REF="[Containments][2][Applets][5]"
-        INSERT="$REF[Configuration][General]]
-launchers=$FILEMANAGER,$BROWSER,applications:$KONSOLE"
-        if grep -qF "$REF" "$TASKBAR"; then
-            awk -i inplace -v ref="$REF" -v insert="$INSERT" '
-                $0 == ref {
-                    print $0
-                    in_block = 1
-                    next
-                }
-                in_block && NF == 0 {
-                   print ""
-                   print insert
-                   in_block = 0
-                }
-                {print $0}
-            ' "$TASKBAR" > "${TASKBAR}.tmp" && mv "${TASKBAR}.tmp" "$TASKBAR"
-        else
-            echo "No $REF section found - please update taskbar manually"
-        fi
-    fi
-    echo "reloading plasmashell..."
-    sudo -u "$USER" kquitapp5 plasmashell >/dev/null 2>&1 || true
-    sudo -u "$USER" kstart5 plasmashell >/dev/null 2>&1 &
-fi
 
 # set background
 echo "personalizing background..."
